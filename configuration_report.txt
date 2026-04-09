@@ -1,0 +1,53 @@
+╔════════════════════════════════════════════════════════════════╗
+║   DYNAMIC GEOSPATIAL SPECTRUM ALLOCATION - CONFIG REPORT      ║
+╚════════════════════════════════════════════════════════════════╝
+
+1. TIER STRUCTURE
+─────────────────────────────────────────────────────────────
+   Tier-0 (UNRESTRICTED):     COMMANDER, TAC_COMMAND nodes
+   Tier-1 (HIGH PRIORITY):    Active Sector + RELAY nodes
+   Tier-2 (STANDARD):         Default tier assignment
+   Tier-3 (THROTTLED):        Secondary units (Keep-alive only)
+
+2. BANDWIDTH ALLOCATION RULES
+─────────────────────────────────────────────────────────────
+   Tier-0:  100% (Full capacity, pre-emptive interrupt)
+   Tier-1:  85-90% (Active sector optimization)
+   Tier-2:  100% (Standard operations)
+   Tier-3:  25% (Background sync, minimal throughput)
+
+3. SIGNAL QUALITY TARGETS
+─────────────────────────────────────────────────────────────
+   Tier-0:  99.8% (Maximum clarity)
+   Tier-1:  98-99.5% (Excellent quality)
+   Tier-3:  70% (Degraded but functional)
+
+4. ACTIVE CONFIGURATION
+─────────────────────────────────────────────────────────────
+   Active Platoon: PLATOON_A
+   Command Source: COMMAND_ALPHA
+   Sector Lock: ENABLED
+   Geospatial Focus: (200, 80) - ALPHA_LEAD position
+   Relay Support: RELAY_NORTH, RELAY_SOUTH, RELAY_EAST
+
+5. NODE INVENTORY
+─────────────────────────────────────────────────────────────
+   [1] COMMAND_ALPHA | Role: COMMANDER    | Platoon: HQ         | Tier: 0
+   [2] TAC_COM_1 | Role: TAC_COMMAND  | Platoon: HQ         | Tier: 0
+   [3] ALPHA_LEAD | Role: SQUAD_LEADER | Platoon: PLATOON_A  | Tier: 1
+   [4] ALPHA_RTO | Role: RTO          | Platoon: PLATOON_A  | Tier: 1
+   [4A] ALPHA_MED | Role: MEDIC        | Platoon: PLATOON_A  | Tier: 1
+   [5] BRAVO_LEAD | Role: SQUAD_LEADER | Platoon: PLATOON_B  | Tier: 3
+   [6] BRAVO_RTO | Role: RTO          | Platoon: PLATOON_B  | Tier: 3
+   [7] CHARLIE_LEAD | Role: SQUAD_LEADER | Platoon: PLATOON_C  | Tier: 3
+   [8] CHARLIE_RTO | Role: RTO          | Platoon: PLATOON_C  | Tier: 3
+   [9] RELAY_NORTH | Role: RELAY        | Platoon: NET        | Tier: 1
+   [10] RELAY_SOUTH | Role: RELAY        | Platoon: NET        | Tier: 1
+   [11] RELAY_EAST | Role: RELAY        | Platoon: NET        | Tier: 1
+
+6. ROUTING OPTIMIZATION
+─────────────────────────────────────────────────────────────
+   ACTIVE: COMMAND_ALPHA → RELAY_NORTH (Latency: 8.5ms)
+   ACTIVE: COMMAND_ALPHA → RELAY_SOUTH (Latency: 12.0ms)
+   ACTIVE: RELAY_NORTH → ALPHA_LEAD (Latency: 7.2ms)
+   ACTIVE: RELAY_NORTH → ALPHA_RTO (Latency: 7.5ms)

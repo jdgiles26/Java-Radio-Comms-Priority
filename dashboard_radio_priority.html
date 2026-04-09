@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIL-SPEC RADIO NET | HARD KNOCKS TACTICAL DASHBOARD</title>
+    <style>
+        :root {
+            --bg-color: #050a0f;
+            --grid-color: rgba(0, 255, 136, 0.1);
+            --primary-color: #00ff88;
+            --alert-color: #ff3333;
+            --dim-color: #4a5a6a;
+            --hud-font: 'Courier New', Courier, monospace;
+            --tier0-color: #ffffff;
+            --tier1-color: #00ff88;
+            --tier3-color: #8b4513;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            font-family: var(--hud-font);
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* --- HEADER --- */
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, rgba(0, 20, 10, 0.95), rgba(0, 10, 5, 0.8));
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        #header h1 {
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 18px;
+            color: #fff;
+            margin-right: 40px;
+            border-right: 2px solid var(--primary-color);
+            padding-right: 20px;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 30px;
+            font-size: 11px;
+        }
+
+        .header-info span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            animation: pulse-indicator 2s infinite;
+        }
+
+        @keyframes pulse-indicator {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 320px;
+            background: rgba(0, 20, 10, 0.95);
+            border-right: 2px solid var(--primary-color);
+            padding: 70px 20px 20px 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            z-index: 10;
+            overflow-y: auto;
+            max-height: calc(100vh - 50px);
+        }
+
+        #sidebar h2 {
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            color: #fff;
+            border-bottom: 1px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+
+        .status-box {
+            border: 1px solid var(--dim-color);
+            padding: 12px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .status-box p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+
+        .status-box strong {
+            color: var(--primary-color);
+        }
+
+        .alert-pulse {
+            animation: pulse 1.5s infinite;
+            color: #fff;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid var(--primary-color);
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 5px var(--primary-color); }
+            50% { opacity: 0.5; box-shadow: 0 0 0 transparent; }
+        }
+
+        .log-container {
+            border: 1px solid var(--dim-color);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            height: 250px;
+            overflow-y: auto;
+            border-radius: 3px;
+        }
+
+        .log-entry {
+            font-size: 10px;
+            margin-bottom: 4px;
+            border-left: 2px solid var(--dim-color);
+            padding-left: 8px;
+            line-height: 1.3;
+            color: var(--dim-color);
+        }
+
+        .log-entry.priority {
+            border-left: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .log-entry.alert {
+            border-left: 2px solid var(--alert-color);
+            color: var(--alert-color);
+        }
+
+        .tier-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            font-size: 9px;
+            border: 1px solid;
+            border-radius: 3px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .tier-0 {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--tier0-color);
+            color: var(--tier0-color);
+        }
+
+        .tier-1 {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--tier1-color);
+            color: var(--tier1-color);
+        }
+
+        .tier-3 {
+            background: rgba(139, 69, 19, 0.1);
+            border-color: var(--tier3-color);
+            color: var(--tier3-color);
+        }
+
+        /* --- MAIN MAP AREA --- */
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: 0 50px, 50px 0;
+            perspective: 1000px;
+            overflow: hidden;
+            margin-top: 50px;
+        }
+
+        #radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 800px;
+            height: 800px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px dashed rgba(0, 255, 136, 0.2);
+            opacity: 0.4;
+        }
+        
+        #radar-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            transform-origin: 0 0;
+            animation: sweep 6s infinite linear;
+            opacity: 0.6;
+        }
+
+        @keyframes sweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- NODES --- */
+        .node {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #000;
+            border: 2px solid var(--dim-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            cursor: crosshair;
+            z-index: 50;
+        }
+
+        .node:hover {
+            width: 18px;
+            height: 18px;
+            box-shadow: 0 0 20px currentColor;
+            z-index: 51;
+        }
+
+        .node-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border: 1px solid var(--primary-color);
+            white-space: nowrap;
+            font-size: 10px;
+            border-radius: 3px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 100;
+        }
+
+        .node:hover .node-label {
+            opacity: 1;
+        }
+
+        /* Tier Styles */
+        .tier-0 {
+            border-color: var(--tier0-color);
+            box-shadow: 0 0 15px var(--tier0-color);
+            z-index: 100;
+        }
+
+        .tier-1 {
+            border-color: var(--tier1-color);
+            box-shadow: 0 0 12px var(--tier1-color);
+            background: var(--tier1-color);
+            z-index: 90;
+        }
+
+        .tier-3 {
+            border-color: var(--tier3-color);
+            opacity: 0.4;
+            box-shadow: none;
+        }
+
+        .node.active-target::before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--primary-color);
+            border-radius: 50%;
+            top: -9px;
+            left: -9px;
+            animation: target-pulse 1.5s infinite;
+        }
+
+        @keyframes target-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Connections */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        .link {
+            stroke: var(--dim-color);
+            stroke-width: 1;
+            opacity: 0.2;
+        }
+
+        .link.active {
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            opacity: 0.9;
+            stroke-dasharray: 8, 4;
+            animation: flow 1.5s infinite linear;
+        }
+
+        @keyframes flow {
+            to { stroke-dashoffset: -12; }
+        }
+
+        /* Legend */
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            left: 330px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-color);
+            padding: 12px;
+            border-radius: 3px;
+            font-size: 10px;
+            z-index: 50;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid;
+        }
+
+        /* Scrollbar styling for sidebar */
+        #sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: var(--dim-color);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div id="header">
+        <h1>⬢ HARD KNOCKS NET</h1>
+        <div class="header-info">
+            <span><div class="status-indicator"></div>SYSTEM: ONLINE</span>
+            <span>PROTOCOL: DPIP-V4</span>
+            <span>MODE: PRIORITY_LOCK</span>
+            <span id="realtime-clock">00:00:00</span>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+        <h2>NETWORK STATUS</h2>
+        <div class="status-box">
+            <div class="alert-pulse">⚠️ PRIORITY LOCK ACTIVE</div>
+            <p><strong>PROTOCOL:</strong> Dynamic Geospatial Priority (DPIP-V4)</p>
+            <p><strong>BANDWIDTH:</strong> RE-ROUTED TO ACTIVE SECTOR</p>
+            <p><strong>STATUS:</strong> OPERATIONAL</p>
+        </div>
+
+        <h2>ACTIVE DIRECTIVE</h2>
+        <div class="status-box">
+            <p style="color:white;"><strong>SOURCE:</strong> COMMAND_ALPHA</p>
+            <p style="color:var(--primary-color);"><strong>TARGET:</strong> PLATOON_A</p>
+            <p style="color:var(--primary-color);"><strong>ACTION:</strong> SECTOR LOCK (200, 80)</p>
+        </div>
+
+        <h2>TIER ALLOCATION</h2>
+        <div class="status-box">
+            <p><span class="tier-badge tier-0">TIER-0</span> COMMAND (Unrestricted)</p>
+            <p><span class="tier-badge tier-1">TIER-1</span> ACTIVE SECTOR + RELAYS</p>
+            <p><span class="tier-badge tier-3">TIER-3</span> SECONDARY UNITS (Throttled)</p>
+        </div>
+
+        <h2>SECTOR INFORMATION</h2>
+        <div class="status-box" id="sector-info">
+            <p><strong>Active Platoon:</strong> <span id="active-platoon">PLATOON_A</span></p>
+            <p><strong>Location:</strong> <span id="sector-coords">(200, 80)</span></p>
+            <p><strong>Bandwidth:</strong> <span id="sector-bw">85%</span></p>
+            <p><strong>Signal Quality:</strong> <span id="sector-signal">99.5%</span></p>
+        </div>
+
+        <h2>NETWORK LOGS</h2>
+        <div class="log-container" id="logs">
+            <div class="log-entry">System initialized...</div>
+            <div class="log-entry">Topology mapped (11 devices)...</div>
+            <div class="log-entry priority">Voice Tag Detected: "PLATOON_A"</div>
+            <div class="log-entry priority">✓ Command Authority Verified</div>
+            <div class="log-entry priority">✓ Sector Lock Initiated</div>
+            <div class="log-entry">Relay configuration optimized</div>
+            <div class="log-entry alert">Platoon B bandwidth reduced 75%</div>
+            <div class="log-entry alert">Platoon C bandwidth reduced 75%</div>
+            <div class="log-entry priority">Optimization Lock: PLATOON_A (ACTIVE)</div>
+            <div class="log-entry">System ready. Awaiting commands...</div>
+        </div>
+
+        <h2>DEVICE COUNT</h2>
+        <div class="status-box">
+            <p><strong>Total Nodes:</strong> <span id="node-count">11</span></p>
+            <p><strong>Tier-0 Nodes:</strong> <span id="tier0-count">2</span></p>
+            <p><strong>Tier-1 Nodes:</strong> <span id="tier1-count">6</span></p>
+            <p><strong>Tier-3 Nodes:</strong> <span id="tier3-count">3</span></p>
+        </div>
+    </div>
+
+    <!-- MAP CONTAINER -->
+    <div id="map-container">
+        <div id="radar-sweep">
+            <div id="radar-line"></div>
+        </div>
+        <svg id="connections"></svg>
+        <div id="nodes-layer"></div>
+        <div id="legend">
+            <div class="legend-item">
+                <div class="legend-dot" style="border-color: white; background: white;"></div>
+                <span>Command (Tier-0)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="border-color: #00ff88; background: #00ff88;"></div>
+                <span>Active Sector (Tier-1)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="border-color: #8b4513; opacity: 0.4;"></div>
+                <span>Secondary (Tier-3)</span>
+            </div>
+            <div class="legend-item">
+                <svg width="20" height="10" style="opacity: 0.7;">
+                    <line x1="0" y1="5" x2="20" y2="5" stroke="#00ff88" stroke-width="1" stroke-dasharray="3,2"/>
+                </svg>
+                <span>Active Connection</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parse network data from generated JS file if available
+        let networkNodes = [];
+        let connectionData = [];
+
+        // Default mock data
+        const defaultNetworkData = [
+            {id:'1', callSign:'COMMAND_ALPHA', role:'COMMANDER', platoon:'HQ', x:50, y:50, tier:0, active:false, bw:100, signal:99.8},
+            {id:'2', callSign:'TAC_COM_1', role:'TAC_COMMAND', platoon:'HQ', x:100, y:250, tier:0, active:false, bw:100, signal:99.8},
+            {id:'3', callSign:'ALPHA_LEAD', role:'SQUAD_LEADER', platoon:'PLATOON_A', x:200, y:80, tier:1, active:true, bw:85, signal:99.5},
+            {id:'4', callSign:'ALPHA_RTO', role:'RTO', platoon:'PLATOON_A', x:220, y:85, tier:1, active:true, bw:85, signal:99.5},
+            {id:'4A', callSign:'ALPHA_MED', role:'MEDIC', platoon:'PLATOON_A', x:210, y:75, tier:1, active:false, bw:85, signal:99.5},
+            {id:'5', callSign:'BRAVO_LEAD', role:'SQUAD_LEADER', platoon:'PLATOON_B', x:300, y:120, tier:3, active:false, bw:25, signal:70},
+            {id:'6', callSign:'BRAVO_RTO', role:'RTO', platoon:'PLATOON_B', x:320, y:130, tier:3, active:false, bw:25, signal:70},
+            {id:'7', callSign:'CHARLIE_LEAD', role:'SQUAD_LEADER', platoon:'PLATOON_C', x:150, y:280, tier:3, active:false, bw:25, signal:70},
+            {id:'8', callSign:'CHARLIE_RTO', role:'RTO', platoon:'PLATOON_C', x:160, y:290, tier:3, active:false, bw:25, signal:70},
+            {id:'9', callSign:'RELAY_NORTH', role:'RELAY', platoon:'NET', x:150, y:100, tier:1, active:false, bw:90, signal:98},
+            {id:'10', callSign:'RELAY_SOUTH', role:'RELAY', platoon:'NET', x:220, y:200, tier:1, active:false, bw:90, signal:98},
+            {id:'11', callSign:'RELAY_EAST', role:'RELAY', platoon:'NET', x:350, y:150, tier:1, active:false, bw:90, signal:98}
+        ];
+
+        const defaultConnectionData = [
+            {source:'1', target:'2', latency:5.0, active:true},
+            {source:'1', target:'9', latency:8.5, active:true},
+            {source:'1', target:'10', latency:12.0, active:true},
+            {source:'9', target:'3', latency:7.2, active:true},
+            {source:'9', target:'4', latency:7.5, active:true},
+            {source:'10', target:'5', latency:9.8, active:false},
+            {source:'10', target:'7', latency:11.3, active:false},
+            {source:'11', target:'5', latency:6.2, active:false},
+            {source:'11', target:'7', latency:8.9, active:false}
+        ];
+
+        networkNodes = defaultNetworkData;
+        connectionData = defaultConnectionData;
+
+        const mapContainer = document.getElementById('map-container');
+        const nodesLayer = document.getElementById('nodes-layer');
+        const svgLayer = document.getElementById('connections');
+        
+        const SCALE = 2.0;
+        const OFFSET_X = 330;
+        const OFFSET_Y = 100;
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('realtime-clock').textContent = 
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+        }
+
+        function initDashboard() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            updateSidebarStats();
+            renderConnections();
+            renderNodes();
+        }
+
+        function updateSidebarStats() {
+            let tier0 = 0, tier1 = 0, tier3 = 0;
+            networkNodes.forEach(n => {
+                if (n.tier === 0) tier0++;
+                else if (n.tier === 1) tier1++;
+                else if (n.tier === 3) tier3++;
+            });
+
+            document.getElementById('tier0-count').textContent = tier0;
+            document.getElementById('tier1-count').textContent = tier1;
+            document.getElementById('tier3-count').textContent = tier3;
+            document.getElementById('node-count').textContent = networkNodes.length;
+
+            const activeNode = networkNodes.find(n => n.active);
+            if (activeNode) {
+                document.getElementById('active-platoon').textContent = activeNode.platoon;
+                document.getElementById('sector-coords').textContent = `(${activeNode.x}, ${activeNode.y})`;
+                document.getElementById('sector-bw').textContent = activeNode.bw.toFixed(0) + '%';
+                document.getElementById('sector-signal').textContent = activeNode.signal.toFixed(1) + '%';
+            }
+        }
+
+        function renderNodes() {
+            networkNodes.forEach(node => {
+                const el = document.createElement('div');
+                el.className = `node tier-${node.tier}`;
+                if (node.active) el.classList.add('active-target');
+                
+                el.style.left = (node.x * SCALE + OFFSET_X) + 'px';
+                el.style.top = (node.y * SCALE + OFFSET_Y) + 'px';
+                
+                const label = document.createElement('div');
+                label.className = 'node-label';
+                label.textContent = `${node.callSign} [T${node.tier}]`;
+                el.appendChild(label);
+
+                nodesLayer.appendChild(el);
+            });
+        }
+
+        function renderConnections() {
+            connectionData.forEach(conn => {
+                const source = networkNodes.find(n => n.id === conn.source);
+                const target = networkNodes.find(n => n.id === conn.target);
+                
+                if (source && target) {
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", source.x * SCALE + OFFSET_X);
+                    line.setAttribute("y1", source.y * SCALE + OFFSET_Y);
+                    line.setAttribute("x2", target.x * SCALE + OFFSET_X);
+                    line.setAttribute("y2", target.y * SCALE + OFFSET_Y);
+                    
+                    line.setAttribute("class", conn.active ? "link active" : "link");
+                    svgLayer.appendChild(line);
+                }
+            });
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!document.querySelector('.node')) {
+                    initDashboard();
+                }
+            }, 500);
+        });
+
+        setTimeout(() => {
+            if (!document.querySelector('.node')) {
+                initDashboard();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

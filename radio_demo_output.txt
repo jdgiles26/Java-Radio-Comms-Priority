@@ -1,0 +1,97 @@
+╔════════════════════════════════════════════════════════════╗
+║   RADIO COMMUNICATIONS NETWORK SIMULATION RESULTS          ║
+╚════════════════════════════════════════════════════════════╝
+
+NETWORK CONFIGURATION:
+  Grid Size: 400 × 400
+  Total Devices: 10
+  Communication Links: 23
+
+DEVICE MANIFEST:
+  [1] Command Center Alpha
+      Type: Fixed Command Center
+      Position: (50, 50)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 100.0 km
+
+  [2] Relay Station 1
+      Type: High Power Repeater
+      Position: (150, 100)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 150.0 km
+
+  [3] Mobile Unit Bravo
+      Type: Mobile Radio Unit
+      Position: (200, 80)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 50.0 km
+
+  [4] Forward Observation
+      Type: Forward Observation Post
+      Position: (250, 150)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 80.0 km
+
+  [5] Hardened Relay Delta
+      Type: Hardened Relay Station
+      Position: (120, 200)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 120.0 km
+
+  [6] Mobile Unit Charlie
+      Type: Mobile Radio Unit
+      Position: (300, 120)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 50.0 km
+
+  [7] Satellite Uplink
+      Type: Satellite Uplink
+      Position: (100, 250)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 400.0 km
+
+  [8] Relay Station 2
+      Type: High Power Repeater
+      Position: (220, 200)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 150.0 km
+
+  [9] Field Radio East
+      Type: Mobile Radio Unit
+      Position: (320, 180)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 50.0 km
+
+  [10] Mobile Unit Foxtrot
+      Type: Mobile Radio Unit
+      Position: (150, 280)
+      Status: ACTIVE
+      Signal Strength: 95.0 dBm
+      Coverage Radius: 50.0 km
+
+NETWORK STATISTICS:
+  Active Devices: 10/10
+  Average Signal Quality: 74.82%
+  Total Network Coverage: 1.20 km
+
+TRANSMISSION RESULTS:
+  Transmission 1 (Device 1 → Device 3): ✗ FAILED
+    Delay: 0.00 ms, Quality: 0.00%
+  Transmission 2 (Device 7 → Device 5): ✓ SUCCESS
+    Delay: 5.39 ms, Quality: 155.05%
+  Transmission 3 (Device 3 → Device 10): ✓ SUCCESS
+    Delay: 28.22 ms, Quality: 66.80%
+
+OPTIMAL ROUTING PATHS:
+
+═════════════════════════════════════════════════════════════
+Simulation completed successfully at: Thu Jan 15 06:28:41 UTC 2026

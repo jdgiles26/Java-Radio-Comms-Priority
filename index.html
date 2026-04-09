@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Network Control Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .tab-container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .tab-menu {
+            display: flex;
+            background: rgba(20, 30, 60, 0.95);
+            border-bottom: 2px solid #00d4ff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            padding: 0;
+            gap: 0;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 18px 30px;
+            background: rgba(30, 40, 70, 0.8);
+            border: none;
+            color: #b0b0b0;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            background: rgba(40, 50, 80, 0.9);
+            color: #00d4ff;
+        }
+
+        .tab-button.active {
+            background: rgba(0, 100, 150, 0.3);
+            color: #00ff88;
+            border-bottom: 3px solid #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3) inset;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow: hidden;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .tab-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .tab-indicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #00ff88;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .tab-button.active .tab-indicator {
+            display: block;
+        }
+
+        /* Welcome screen when first loaded */
+        .welcome-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            background: linear-gradient(135deg, rgba(10, 14, 39, 0.9) 0%, rgba(20, 30, 60, 0.9) 100%);
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .welcome-screen h1 {
+            font-size: 48px;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-screen p {
+            font-size: 16px;
+            color: #b0b0b0;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+            max-width: 800px;
+        }
+
+        .info-card {
+            background: rgba(30, 40, 70, 0.6);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            padding: 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .info-card h3 {
+            color: #00ff88;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-card p {
+            font-size: 13px;
+            color: #a0a0a0;
+        }
+
+        .status-bar {
+            background: rgba(20, 30, 60, 0.95);
+            border-top: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tab-container">
+        <!-- TAB MENU -->
+        <div class="tab-menu">
+            <button class="tab-button active" data-tab="welcome">
+                ⬢ Command Center
+            </button>
+            <button class="tab-button" data-tab="shortest-path">
+                Shortest Path
+            </button>
+            <button class="tab-button" data-tab="hard-knocks">
+                Hard Knocks Radio Net
+            </button>
+        </div>
+
+        <!-- TAB CONTENT -->
+        <div class="tab-content active" id="welcome-tab">
+            <div class="welcome-screen">
+                <h1>⬢ RADIO NETWORK CONTROL</h1>
+                <p>Advanced Radio Communications Simulation & Tactical Management System</p>
+                
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>📍 Shortest Path</h3>
+                        <p>Grid-based pathfinding using Dijkstra's algorithm for optimal route calculation through terrain with obstacles and variable travel times.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>📡 Hard Knocks Radio Net</h3>
+                        <p>Dynamic geospatial priority allocation with role-based QoS. Features tactical sector locking and bandwidth management for mission-critical communications.</p>
+                    </div>
+                </div>
+
+                <p style="margin-top: 40px; color: #00ff88;">Select a mode from the menu above to begin</p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="shortest-path-tab">
+            <iframe src="dashboard_shortest_path.html" title="Shortest Path Dashboard"></iframe>
+        </div>
+
+        <div class="tab-content" id="hard-knocks-tab">
+            <iframe src="dashboard_radio_priority.html" title="Hard Knocks Radio Net"></iframe>
+        </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-indicator"></span>
+            <span>SYSTEM: ONLINE</span>
+        </div>
+        <div class="status-item">
+            <span id="clock">00:00:00</span>
+        </div>
+        <div class="status-item">
+            <span>JAVA-WIZARDMAP v1.0</span>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = 
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>

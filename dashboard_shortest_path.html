@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIL-SPEC RADIO NET | TACTICAL COMMAND DASHBOARD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: rgba(20, 30, 50, 0.95);
+            border-right: 2px solid #00d4ff;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 20px;
+            border-bottom: 2px solid #00d4ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(ellipse at center, #2a3f5f 0%, #1a2a3f 100%);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect fill="%23223344" width="40" height="40"/><path fill="%23334455" d="M0,40L40,0M40,40v-40M0,0h40" stroke="%23334455" stroke-width="0.5"/></svg>');
+            cursor: crosshair;
+        }
+
+        .stats-panel {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-top: 2px solid #00d4ff;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #00d4ff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        h2 {
+            color: #00d4ff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #00d4ff;
+            text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+        }
+
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .device-item {
+            background: rgba(0, 100, 150, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #00d4ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .device-item:hover {
+            background: rgba(0, 150, 200, 0.5);
+            transform: translateX(5px);
+        }
+
+        .device-item.selected {
+            background: rgba(0, 212, 255, 0.3);
+            border-left-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .device-name {
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 3px;
+        }
+
+        .device-info {
+            font-size: 11px;
+            color: #aaa;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #0099cc, #0077aa);
+            color: white;
+            border: 1px solid #00d4ff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .button:hover {
+            background: linear-gradient(135deg, #00bbdd, #0088bb);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .button.secondary {
+            background: linear-gradient(135deg, #666, #444);
+            border-color: #888;
+        }
+
+        .button.secondary:hover {
+            background: linear-gradient(135deg, #777, #555);
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.active {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .status-indicator.inactive {
+            background: #ff4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .path-info {
+            background: rgba(0, 100, 150, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00d4ff;
+            font-size: 11px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .path-info h3 {
+            color: #00d4ff;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .path-item {
+            padding: 3px;
+            margin: 2px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+        }
+
+        .legend {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00d4ff;
+            font-size: 11px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #00ffff;
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 280px;
+            }
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #00d4ff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #00d4ff;
+            font-size: 11px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 150px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="section">
+                <h2>📡 Network Control</h2>
+                <div class="control-group">
+                    <button class="button" onclick="loadDemoConfiguration()">Load Demo Config</button>
+                    <button class="button secondary" onclick="resetNetwork()">Reset Network</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🎯 Device Selection</h2>
+                <div class="device-list" id="deviceList"></div>
+            </div>
+
+            <div class="section">
+                <h2>📍 Device Details</h2>
+                <div id="deviceDetails" style="font-size: 12px; color: #aaa;">
+                    Select a device to view details
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🛰️ Communications</h2>
+                <div class="control-group">
+                    <label>Target Device:</label>
+                    <select id="targetDevice" style="width: 100%;">
+                        <option value="">Select target...</option>
+                    </select>
+                </div>
+                <button class="button" onclick="calculatePath()" style="width: 100%;">Calculate Path</button>
+                <div class="path-info" id="pathInfo" style="display: none;"></div>
+            </div>
+
+            <div class="section">
+                <h2>📊 Network Status</h2>
+                <div id="networkStatus" style="font-size: 11px; line-height: 1.6;">
+                    <div><span class="status-indicator active"></span>Devices Ready: 0</div>
+                    <div><span class="status-indicator active"></span>Active Links: 0</div>
+                    <div>Avg Signal Quality: 0%</div>
+                    <div>Total Coverage: 0 km</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📋 Legend</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff4444;"></div>
+                        <span>Command Center</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00ff00;"></div>
+                        <span>Mobile Radio</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00d4ff;"></div>
+                        <span>Relay Station</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffff00;"></div>
+                        <span>Hardened Relay</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff8800;"></div>
+                        <span>Observation Post</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff00ff;"></div>
+                        <span>High Power Repeater</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00ffff;"></div>
+                        <span>Satellite Uplink</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>🌐 Radio Communications Network Dashboard</h1>
+                <div class="header-controls">
+                    <button class="button secondary" onclick="toggleSimulation()">▶ Start Simulation</button>
+                    <button class="button secondary" onclick="toggleAutoScale()">📏 Auto Scale</button>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="networkCanvas"></canvas>
+                <div id="tooltip" class="tooltip" style="display: none;"></div>
+            </div>
+
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <div class="stat-label">Total Devices</div>
+                    <div class="stat-value" id="totalDevices">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Active Devices</div>
+                    <div class="stat-value" id="activeDevices">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Network Links</div>
+                    <div class="stat-value" id="networkLinks">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Avg Signal Quality</div>
+                    <div class="stat-value" id="avgQuality">0%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Simulation Time</div>
+                    <div class="stat-value" id="simTime">00:00:00</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Network Coverage</div>
+                    <div class="stat-value" id="coverage">0 km</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        const state = {
+            devices: [],
+            selectedDevice: null,
+            selectedPath: [],
+            networkConnections: [],
+            simulationRunning: false,
+            simulationTime: 0,
+            autoScale: true,
+            panX: 0,
+            panY: 0,
+            scale: 1,
+            hoveredDevice: null
+        };
+
+        // Radio device types
+        const DEVICE_TYPES = {
+            0: { name: 'Standard Node', color: '#888888' },
+            1: { name: 'Mobile Radio Unit', color: '#00ff00' },
+            2: { name: 'Command Center', color: '#ff4444' },
+            3: { name: 'Hardened Relay', color: '#ffff00' },
+            4: { name: 'Forward Observation Post', color: '#ff8800' },
+            5: { name: 'High Power Repeater', color: '#ff00ff' },
+            6: { name: 'Satellite Uplink', color: '#00ffff' }
+        };
+
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            render();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Demo configuration
+        function loadDemoConfiguration() {
+            state.devices = [
+                { id: 1, name: 'Command Center Alpha', x: 50, y: 50, type: 2, battery: 95, signal: -45, active: true },
+                { id: 2, name: 'Relay Station 1', x: 150, y: 100, type: 5, battery: 92, signal: -52, active: true },
+                { id: 3, name: 'Mobile Unit Bravo', x: 200, y: 80, type: 1, battery: 78, signal: -65, active: true },
+                { id: 4, name: 'Forward Observation', x: 250, y: 150, type: 4, battery: 88, signal: -58, active: true },
+                { id: 5, name: 'Hardened Relay Delta', x: 120, y: 200, type: 3, battery: 99, signal: -48, active: true },
+                { id: 6, name: 'Mobile Unit Charlie', x: 300, y: 120, type: 1, battery: 65, signal: -72, active: true },
+                { id: 7, name: 'Satellite Uplink', x: 100, y: 250, type: 6, battery: 100, signal: -35, active: true },
+                { id: 8, name: 'Relay Station 2', x: 220, y: 200, type: 5, battery: 91, signal: -55, active: true },
+                { id: 9, name: 'Field Radio East', x: 320, y: 180, type: 1, battery: 72, signal: -68, active: true },
+                { id: 10, name: 'Mobile Unit Foxtrot', x: 150, y: 280, type: 1, battery: 84, signal: -61, active: true }
+            ];
+
+            calculateNetworkConnections();
+            updateDeviceList();
+            updateStats();
+            render();
+            showNotification('Demo configuration loaded: 10 radio devices initialized');
+        }
+
+        function calculateNetworkConnections() {
+            state.networkConnections = [];
+
+            for (let i = 0; i < state.devices.length; i++) {
+                for (let j = i + 1; j < state.devices.length; j++) {
+                    const d1 = state.devices[i];
+                    const d2 = state.devices[j];
+
+                    const distance = Math.hypot(d2.x - d1.x, d2.y - d1.y);
+                    
+                    // Calculate coverage based on device type
+                    const getRange = (type) => {
+                        switch(type) {
+                            case 6: return 300;  // Satellite
+                            case 5: return 200;  // High power repeater
+                            case 2: return 150;  // Command center
+                            case 3: return 180;  // Hardened relay
+                            case 4: return 120;  // Observation post
+                            case 1: return 80;   // Mobile unit
+                            default: return 60;
+                        }
+                    };
+
+                    const range1 = getRange(d1.type);
+                    const range2 = getRange(d2.type);
+                    const maxRange = Math.max(range1, range2);
+
+                    if (distance <= maxRange && d1.active && d2.active) {
+                        const signalQuality = 100 * (1 - (distance / maxRange));
+                        state.networkConnections.push({
+                            from: d1.id,
+                            to: d2.id,
+                            distance: distance,
+                            quality: signalQuality
+                        });
+                    }
+                }
+            }
+        }
+
+        function updateDeviceList() {
+            const list = document.getElementById('deviceList');
+            list.innerHTML = '';
+
+            state.devices.forEach(device => {
+                const div = document.createElement('div');
+                div.className = 'device-item' + (state.selectedDevice?.id === device.id ? ' selected' : '');
+                div.innerHTML = `
+                    <div class="device-name">${device.name}</div>
+                    <div class="device-info">
+                        <span>📍 (${device.x}, ${device.y})</span>
+                        <span>🔋 ${device.battery}%</span>
+                        <span>📶 ${device.signal} dBm</span>
+                        <span>${device.active ? '🟢 Active' : '🔴 Offline'}</span>
+                    </div>
+                `;
+                div.onclick = () => selectDevice(device);
+                list.appendChild(div);
+            });
+
+            // Update target device select
+            const targetSelect = document.getElementById('targetDevice');
+            const currentValue = targetSelect.value;
+            targetSelect.innerHTML = '<option value="">Select target...</option>';
+            state.devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.id;
+                option.textContent = device.name;
+                targetSelect.appendChild(option);
+            });
+            targetSelect.value = currentValue;
+        }
+
+        function selectDevice(device) {
+            state.selectedDevice = device;
+            state.selectedPath = [];
+            updateDeviceList();
+            updateDeviceDetails();
+            render();
+        }
+
+        function updateDeviceDetails() {
+            const details = document.getElementById('deviceDetails');
+            if (!state.selectedDevice) {
+                details.textContent = 'Select a device to view details';
+                return;
+            }
+
+            const d = state.selectedDevice;
+            const typeInfo = DEVICE_TYPES[d.type];
+            const connections = state.networkConnections.filter(c => c.from === d.id || c.to === d.id);
+
+            details.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <div><strong>${d.name}</strong></div>
+                    <div>Type: ${typeInfo.name}</div>
+                    <div>Position: (${d.x}, ${d.y})</div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div>Battery: <span style="color: ${d.battery > 50 ? '#00ff00' : '#ff8800'}">${d.battery}%</span></div>
+                    <div>Signal: <span style="color: ${d.signal > -60 ? '#00ff00' : '#ff8800'}">${d.signal} dBm</span></div>
+                    <div>Status: <span style="color: ${d.active ? '#00ff00' : '#ff4444'}">${d.active ? 'ACTIVE' : 'OFFLINE'}</span></div>
+                </div>
+                <div>
+                    <div><strong>Connections: ${connections.length}</strong></div>
+                    ${connections.map(c => {
+                        const otherId = c.from === d.id ? c.to : c.from;
+                        const other = state.devices.find(dev => dev.id === otherId);
+                        return `<div style="font-size: 10px; margin-top: 3px;">
+                            → ${other.name} (Quality: ${c.quality.toFixed(1)}%)
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function calculatePath() {
+            const targetId = parseInt(document.getElementById('targetDevice').value);
+            if (!state.selectedDevice || !targetId || targetId === state.selectedDevice.id) {
+                showNotification('Select a source and different target device');
+                return;
+            }
+
+            // Simple pathfinding using BFS
+            const path = findPath(state.selectedDevice.id, targetId);
+            
+            if (!path) {
+                showNotification('No communication path found');
+                state.selectedPath = [];
+            } else {
+                state.selectedPath = path;
+                const pathInfo = document.getElementById('pathInfo');
+                pathInfo.innerHTML = '<h3>Communication Path</h3>' + 
+                    path.map((id, idx) => {
+                        const dev = state.devices.find(d => d.id === id);
+                        return `<div class="path-item">${idx + 1}. ${dev.name}</div>`;
+                    }).join('') +
+                    `<div class="path-item" style="margin-top: 8px; border-top: 1px solid #00d4ff; padding-top: 8px;">
+                        Total Hops: ${path.length - 1}
+                    </div>`;
+                pathInfo.style.display = 'block';
+                showNotification(`Path found: ${path.length} hops`);
+            }
+
+            render();
+        }
+
+        function findPath(fromId, toId) {
+            const queue = [[fromId]];
+            const visited = new Set([fromId]);
+
+            while (queue.length > 0) {
+                const path = queue.shift();
+                const currentId = path[path.length - 1];
+
+                if (currentId === toId) {
+                    return path;
+                }
+
+                for (const conn of state.networkConnections) {
+                    let nextId = null;
+                    if (conn.from === currentId) nextId = conn.to;
+                    else if (conn.to === currentId) nextId = conn.from;
+
+                    if (nextId && !visited.has(nextId)) {
+                        visited.add(nextId);
+                        queue.push([...path, nextId]);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function updateStats() {
+            const active = state.devices.filter(d => d.active).length;
+            const links = state.networkConnections.length;
+            const avgQuality = links > 0 ? 
+                state.networkConnections.reduce((sum, c) => sum + c.quality, 0) / links : 0;
+            const coverage = state.devices.reduce((sum, d) => {
+                const typeRange = [60, 80, 150, 180, 120, 200, 300];
+                return sum + (typeRange[d.type] || 60);
+            }, 0) / 1000;
+
+            document.getElementById('totalDevices').textContent = state.devices.length;
+            document.getElementById('activeDevices').textContent = active;
+            document.getElementById('networkLinks').textContent = links;
+            document.getElementById('avgQuality').textContent = avgQuality.toFixed(0) + '%';
+            document.getElementById('coverage').textContent = coverage.toFixed(1) + ' km';
+            document.getElementById('simTime').textContent = formatTime(state.simulationTime);
+        }
+
+        function formatTime(ms) {
+            const seconds = Math.floor(ms / 1000) % 60;
+            const minutes = Math.floor(ms / 60000) % 60;
+            const hours = Math.floor(ms / 3600000);
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function toggleSimulation() {
+            state.simulationRunning = !state.simulationRunning;
+            if (state.simulationRunning) {
+                showNotification('Simulation started');
+                simulationLoop();
+            } else {
+                showNotification('Simulation paused');
+            }
+        }
+
+        function simulationLoop() {
+            if (!state.simulationRunning) return;
+
+            state.simulationTime += 100;
+            
+            // Simulate battery drain
+            state.devices.forEach(d => {
+                if (d.active && d.battery > 0) {
+                    d.battery -= Math.random() * 0.01;
+                    if (d.battery < 0) d.battery = 0;
+                }
+            });
+
+            updateStats();
+            render();
+            setTimeout(simulationLoop, 100);
+        }
+
+        function toggleAutoScale() {
+            state.autoScale = !state.autoScale;
+            render();
+        }
+
+        function resetNetwork() {
+            state.devices = [];
+            state.selectedDevice = null;
+            state.selectedPath = [];
+            state.networkConnections = [];
+            state.simulationTime = 0;
+            state.simulationRunning = false;
+            updateDeviceList();
+            updateStats();
+            render();
+            showNotification('Network reset');
+        }
+
+        function render() {
+            ctx.fillStyle = '#1a2a3f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid
+            drawGrid();
+
+            // Draw connections
+            drawConnections();
+
+            // Draw devices
+            drawDevices();
+
+            // Draw selected path
+            if (state.selectedPath.length > 1) {
+                drawPath();
+            }
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
+            ctx.lineWidth = 0.5;
+
+            const gridSize = 50;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawConnections() {
+            ctx.lineWidth = 1;
+
+            state.networkConnections.forEach(conn => {
+                const d1 = state.devices.find(d => d.id === conn.from);
+                const d2 = state.devices.find(d => d.id === conn.to);
+
+                if (!d1 || !d2) return;
+
+                const quality = conn.quality;
+                const hsl = quality > 50 ? `hsl(120, 100%, 50%)` : `hsl(30, 100%, 50%)`;
+                ctx.strokeStyle = hsl;
+                ctx.globalAlpha = quality / 100;
+
+                ctx.beginPath();
+                ctx.moveTo(d1.x, d1.y);
+                ctx.lineTo(d2.x, d2.y);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            });
+        }
+
+        function drawDevices() {
+            state.devices.forEach(device => {
+                const typeInfo = DEVICE_TYPES[device.type];
+                const isSelected = state.selectedDevice?.id === device.id;
+                const isHovered = state.hoveredDevice?.id === device.id;
+
+                // Draw coverage circle
+                if (isSelected || isHovered) {
+                    const typeRange = [60, 80, 150, 180, 120, 200, 300];
+                    const range = typeRange[device.type] || 60;
+                    ctx.fillStyle = 'rgba(0, 212, 255, 0.05)';
+                    ctx.beginPath();
+                    ctx.arc(device.x, device.y, range, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = 'rgba(0, 212, 255, 0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+
+                // Draw device
+                ctx.fillStyle = typeInfo.color;
+                ctx.beginPath();
+                ctx.arc(device.x, device.y, isSelected ? 8 : 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw outer ring
+                if (isSelected) {
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else if (isHovered) {
+                    ctx.strokeStyle = '#00d4ff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else if (!device.active) {
+                    ctx.strokeStyle = '#ff4444';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Draw label
+                ctx.fillStyle = '#e0e0e0';
+                ctx.font = '11px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(device.id, device.x, device.y + 15);
+            });
+        }
+
+        function drawPath() {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#00ff00';
+            ctx.setLineDash([5, 5]);
+
+            for (let i = 0; i < state.selectedPath.length - 1; i++) {
+                const d1 = state.devices.find(d => d.id === state.selectedPath[i]);
+                const d2 = state.devices.find(d => d.id === state.selectedPath[i + 1]);
+
+                if (d1 && d2) {
+                    ctx.beginPath();
+                    ctx.moveTo(d1.x, d1.y);
+                    ctx.lineTo(d2.x, d2.y);
+                    ctx.stroke();
+                }
+            }
+
+            ctx.setLineDash([]);
+        }
+
+        function showNotification(message) {
+            console.log(message);
+            // You could add a toast notification here
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            state.hoveredDevice = null;
+            for (const device of state.devices) {
+                if (Math.hypot(device.x - x, device.y - y) < 12) {
+                    state.hoveredDevice = device;
+                    canvas.style.cursor = 'pointer';
+                    break;
+                }
+            }
+            if (!state.hoveredDevice) {
+                canvas.style.cursor = 'crosshair';
+            }
+
+            render();
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            for (const device of state.devices) {
+                if (Math.hypot(device.x - x, device.y - y) < 12) {
+                    selectDevice(device);
+                    return;
+                }
+            }
+        });
+
+        // Initial load
+        loadDemoConfiguration();
+    </script>
+</body>
+</html>
